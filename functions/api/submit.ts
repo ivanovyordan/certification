@@ -362,9 +362,11 @@ async function sendCertificateEmail(
   certId: string,
   pdfBytes: Uint8Array
 ): Promise<void> {
-  const pdfBase64 = btoa(
-    String.fromCharCode(...pdfBytes)
-  );
+  let binary = "";
+  for (let i = 0; i < pdfBytes.length; i++) {
+    binary += String.fromCharCode(pdfBytes[i]);
+  }
+  const pdfBase64 = btoa(binary);
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
