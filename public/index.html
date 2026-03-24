@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Licensed AI-Powered Insights Leverage Specialist™ | Data Gibberish Certification</title>
+<meta name="description" content="Become a Licensed AI-Powered Insights Leverage Specialist™. The only certification that matters.">
+<meta property="og:title" content="Get Certified: Licensed AI-Powered Insights Leverage Specialist™">
+<meta property="og:description" content="Prove your enterprise-grade data excellence. Take the exam now.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --corp-bg: #f4f5f7;
+    --corp-card: #ffffff;
+    --corp-text: #1a1a2e;
+    --corp-muted: #6b7280;
+    --corp-border: #e2e5ea;
+    --corp-blue: #2563eb;
+    --corp-blue-hover: #1d4ed8;
+    --corp-blue-light: #eff6ff;
+    --c1: #1e2939;
+    --c2: #6a7282;
+    --c3: #94a3b8;
+    --c4: #cbd5e1;
+    --c5: #f1f5f9;
+    --radio-size: 20px;
+    --tr: 0.2s ease;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--corp-bg); color: var(--corp-text); line-height: 1.6; min-height: 100vh; }
+
+  .exam-header { background: var(--c1); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; position: relative; }
+  .exam-header-logo { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; font-weight: 600; }
+  .exam-header-title { font-size: 14px; font-weight: 500; position: absolute; left: 50%; transform: translateX(-50%); }
+  .exam-header-timer { font-family: 'DM Sans', monospace; font-size: 14px; opacity: 0.6; }
+
+  .screen { display: none; animation: fadeIn 0.4s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* INTRO */
+  .intro-container { max-width: 640px; margin: 60px auto; padding: 0 20px; text-align: center; }
+  .intro-badge { display: inline-block; background: var(--corp-blue-light); color: var(--corp-blue); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 24px; }
+  .intro-container h1 { font-family: 'DM Sans', sans-serif; font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+  .intro-container p { color: var(--corp-muted); font-size: 16px; margin-bottom: 12px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .intro-details { display: flex; gap: 32px; justify-content: center; margin: 32px 0; font-size: 14px; color: var(--corp-muted); }
+  .intro-details span { display: flex; align-items: center; gap: 6px; }
+  .intro-details .dot { width: 6px; height: 6px; background: var(--corp-blue); border-radius: 50%; }
+
+  .btn-primary { display: inline-block; background: var(--corp-blue); color: white; border: none; padding: 14px 40px; font-size: 16px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background var(--tr), transform var(--tr); font-family: 'DM Sans', sans-serif; }
+  .btn-primary:hover { background: var(--corp-blue-hover); transform: translateY(-1px); }
+  .btn-primary:disabled { background: #a0aec0; cursor: not-allowed; transform: none; }
+
+  /* QUIZ */
+  .quiz-container { max-width: 700px; margin: 40px auto; padding: 0 20px; }
+  .progress-bar-container { background: var(--corp-border); height: 4px; border-radius: 2px; margin-bottom: 40px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--corp-blue); border-radius: 2px; transition: width 0.4s ease; }
+  .question-counter { font-size: 13px; color: var(--corp-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
+  .question-card { background: var(--corp-card); border: 1px solid var(--corp-border); border-radius: 12px; padding: 36px; margin-bottom: 24px; }
+  .question-text { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 28px; }
+  .options-list { display: flex; flex-direction: column; gap: 12px; }
+  .option-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; border: 2px solid var(--corp-border); border-radius: 10px; cursor: pointer; transition: all var(--tr); }
+  .option-item:hover { border-color: #b0bec5; background: #fafbfc; }
+  .option-item.selected { border-color: var(--corp-blue); background: var(--corp-blue-light); }
+  .option-radio { width: var(--radio-size); height: var(--radio-size); min-width: var(--radio-size); border: 2px solid #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all var(--tr); margin-top: 1px; }
+  .option-item.selected .option-radio { border-color: var(--corp-blue); background: var(--corp-blue); }
+  .option-radio::after { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; opacity: 0; transition: opacity var(--tr); }
+  .option-item.selected .option-radio::after { opacity: 1; }
+  .option-label { font-size: 15px; line-height: 1.5; letter-spacing: -0.01em; }
+  .option-letter { font-weight: 700; color: var(--corp-muted); margin-right: 6px; }
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .btn-secondary { background: none; border: 2px solid var(--corp-border); padding: 12px 28px; font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer; color: var(--corp-muted); transition: all var(--tr); font-family: 'DM Sans', sans-serif; }
+  .btn-secondary:hover { border-color: #94a3b8; color: var(--corp-text); }
+
+  /* NAME + EMAIL SCREEN */
+  .name-container { max-width: 500px; margin: 60px auto; padding: 0 20px; text-align: center; }
+  .name-container h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .name-container p { color: var(--corp-muted); margin-bottom: 32px; font-size: 15px; }
+  .form-group { text-align: left; margin-bottom: 20px; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--corp-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 14px 18px; font-size: 16px; font-family: 'DM Sans', sans-serif; border: 2px solid var(--corp-border); border-radius: 10px; outline: none; transition: border-color var(--tr); }
+  .form-input:focus { border-color: var(--corp-blue); }
+  .form-input::placeholder { color: #c0c7d0; }
+  .form-hint { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+  .name-container .btn-primary { margin-top: 12px; }
+
+  /* CERT SCREEN */
+  .cert-screen-bg { background: var(--c1); min-height: 100vh; padding: 40px 20px 60px; }
+  .cert-wrapper { max-width: 800px; margin: 0 auto; }
+  .cert-congrats { text-align: center; color: white; margin-bottom: 32px; }
+  .cert-congrats h2 { font-family: 'DM Sans', sans-serif; font-size: 20px; font-weight: 600; color: var(--c4); letter-spacing: 1px; margin-bottom: 4px; }
+  .cert-congrats p { color: var(--c2); font-size: 14px; }
+
+  /* THE CERTIFICATE */
+  #certificate-container {
+    position: relative;
+    background: #ffffff;
+    border: 2px solid var(--c1);
+    padding: 48px 56px;
+    text-align: center;
+    box-shadow: 0 1px 0 0 var(--c4), 0 24px 60px rgba(0,0,0,0.25);
+  }
+  .cert-rule-top, .cert-rule-bottom {
+    position: absolute; left: 20px; right: 20px; height: 1px; background: var(--c4);
+  }
+  .cert-rule-top { top: 16px; }
+  .cert-rule-bottom { bottom: 16px; }
+
+  .cert-top-line { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--c2); margin-bottom: 24px; font-weight: 600; }
+
+  .cert-seal-icon { width: 64px; height: 64px; margin: 0 auto 24px; }
+  .cert-seal-icon svg { width: 100%; height: 100%; }
+
+  .cert-title-pre { font-size: 14px; color: var(--c2); margin-bottom: 4px; font-weight: 400; }
+  .cert-awarded-to { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--c3); margin-bottom: 6px; }
+  .cert-name { font-size: 36px; font-weight: 700; color: var(--c1); margin-bottom: 20px; letter-spacing: -0.5px; }
+  .cert-divider { width: 60px; height: 2px; background: var(--c1); margin: 0 auto 20px; }
+
+  .cert-title { font-size: 26px; font-weight: 700; color: var(--c1); line-height: 1.25; margin-bottom: 20px; letter-spacing: -0.3px; }
+
+  .cert-body { font-size: 15px; line-height: 1.7; color: var(--c2); max-width: 520px; margin: 0 auto 24px; }
+
+  .cert-specialization { display: inline-block; background: var(--c5); border: 1px solid var(--c4); border-radius: 4px; padding: 10px 24px; margin-bottom: 24px; }
+  .cert-spec-label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--c2); margin-bottom: 4px; font-weight: 600; }
+  .cert-spec-value { font-size: 15px; color: var(--c1); font-weight: 600; }
+
+  .cert-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--c4); }
+  .cert-footer-col { text-align: center; flex: 1; }
+  .cert-footer-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--c3); margin-bottom: 3px; font-weight: 600; }
+  .cert-footer-value { font-size: 13px; color: var(--c2); font-weight: 500; }
+
+  .cert-issuer { font-size: 9px; letter-spacing: 1px; color: var(--c3); margin-top: 20px; line-height: 1.6; }
+
+  /* ACTIONS BELOW CERT */
+  .cert-actions { text-align: center; margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+  .btn-download { display: inline-flex; align-items: center; gap: 8px; background: white; color: var(--c1); border: none; padding: 14px 36px; font-size: 15px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all var(--tr); font-family: 'DM Sans', sans-serif; }
+  .btn-download:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
+
+  .btn-outline-light { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1.5px solid #364152; color: var(--c3); padding: 12px 28px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all var(--tr); font-family: 'DM Sans', sans-serif; }
+  .btn-outline-light:hover { border-color: var(--c3); color: white; }
+
+  .subscribe-cta { text-align: center; margin-top: 40px; padding-top: 28px; border-top: 1px solid #2a3a4e; }
+  .subscribe-cta p { color: var(--c2); font-size: 14px; margin-bottom: 12px; }
+  .subscribe-cta a { color: white; text-decoration: none; font-weight: 700; font-size: 16px; transition: color var(--tr); }
+  .subscribe-cta a:hover { color: var(--c4); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; z-index: 200; opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast.success { background: #065f46; color: #d1fae5; }
+  .toast.error { background: #7f1d1d; color: #fecaca; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .exam-header { padding: 12px 16px; }
+    .exam-header-title { display: none; }
+    .intro-container { margin: 40px auto; }
+    .intro-container h1 { font-size: 26px; }
+    .intro-details { gap: 16px; font-size: 12px; }
+    .question-card { padding: 24px 20px; }
+    .question-text { font-size: 16px; }
+    #certificate-container { padding: 32px 20px; }
+    .cert-title { font-size: 21px; }
+    .cert-name { font-size: 28px; }
+    .cert-footer { flex-direction: column; gap: 14px; align-items: center; }
+    .cert-rule-top, .cert-rule-bottom { left: 12px; right: 12px; }
+  }
+
+  #cert-canvas { display: none; }
+</style>
+</head>
+<body>
+
+<div class="exam-header">
+  <div class="exam-header-logo">Data Gibberish Certification</div>
+  <div class="exam-header-title">Licensed AI-Powered Insights Leverage Specialist™</div>
+  <div class="exam-header-timer" id="timer">00:00</div>
+</div>
+
+<!-- INTRO -->
+<div class="screen active" id="screen-intro">
+  <div class="intro-container">
+    <div class="intro-badge">Official Certification Exam</div>
+    <h1>Licensed AI-Powered Insights Leverage Specialist™</h1>
+    <p>Validate your enterprise-grade proficiency in leveraging cross-functional data synergies across the modern AI-powered stack.</p>
+    <p style="font-size: 13px; color: #9ca3af;">Trusted by 0 Fortune 500 companies.</p>
+    <div class="intro-details">
+      <span><span class="dot"></span> 5 Questions</span>
+      <span><span class="dot"></span> Multiple Choice</span>
+      <span><span class="dot"></span> 100% Pass Rate</span>
+    </div>
+    <button class="btn-primary" onclick="startExam()">Begin Exam</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-container">
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="question-counter" id="question-counter"></div>
+    <div class="question-card">
+      <div class="question-text" id="question-text"></div>
+      <div class="options-list" id="options-list"></div>
+    </div>
+    <div class="quiz-nav">
+      <button class="btn-secondary" id="btn-prev" onclick="prevQuestion()">&#8592; Back</button>
+      <button class="btn-primary" id="btn-next" onclick="nextQuestion()" disabled>Next &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAME + EMAIL -->
+<div class="screen" id="screen-name">
+  <div class="name-container">
+    <h2>Exam Complete</h2>
+    <p>Enter your details to generate your official certification.</p>
+    <div class="form-group">
+      <label class="form-label" for="name-input">Full Name <span style="color:#ef4444">*</span></label>
+      <input type="text" class="form-input" id="name-input" placeholder="As it should appear on your certificate" maxlength="40" autocomplete="name">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="email-input">Email Address <span style="color:#ef4444">*</span></label>
+      <input type="email" class="form-input" id="email-input" placeholder="your@email.com" autocomplete="email">
+      <div class="form-hint">We'll send your official PDF certificate to this address.</div>
+    </div>
+    <button class="btn-primary" id="btn-generate" onclick="generateCert()" disabled>Generate Certificate</button>
+  </div>
+</div>
+
+<!-- CERTIFICATE -->
+<div class="screen" id="screen-cert">
+  <div class="cert-screen-bg">
+    <div class="cert-wrapper">
+      <div class="cert-congrats">
+        <h2>EXAMINATION PASSED</h2>
+        <p>Your certificate has been issued. Congratulations on this meaningless achievement.</p>
+      </div>
+
+      <div id="certificate-container">
+        <div class="cert-rule-top"></div>
+        <div class="cert-rule-bottom"></div>
+
+        <div class="cert-top-line">Certificate of Enterprise Excellence</div>
+
+        <div class="cert-seal-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="44" fill="none" stroke="#1e2939" stroke-width="2"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#94a3b8" stroke-width="0.5"/>
+            <text x="50" y="38" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="6" font-weight="700" fill="#1e2939" letter-spacing="0.5">DATA</text>
+            <text x="50" y="48" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="6" font-weight="700" fill="#1e2939" letter-spacing="0.5">GIBBERISH</text>
+            <text x="50" y="60" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="5" font-weight="600" fill="#6a7282" letter-spacing="1.5">CERTIFIED</text>
+          </svg>
+        </div>
+
+        <div class="cert-title-pre">This is to certify that</div>
+        <div class="cert-awarded-to">THE FOLLOWING INDIVIDUAL</div>
+        <div class="cert-name" id="cert-name"></div>
+
+        <div class="cert-divider"></div>
+
+        <div class="cert-title">Licensed AI-Powered Insights<br>Leverage Specialist&#8482;</div>
+
+        <div class="cert-body">
+          has demonstrated exceptional proficiency in Leveraging Cross-Functional
+          Synergies Across the Modern AI-Powered Data Stack and is hereby authorized
+          to Drive Scalable, Enterprise-Grade, Value-Aligned Data Outcomes in any
+          organization that has no idea what any of this means.
+        </div>
+
+        <div class="cert-specialization">
+          <div class="cert-spec-label">Area of Specialization</div>
+          <div class="cert-spec-value" id="cert-spec"></div>
+        </div>
+
+        <div class="cert-footer">
+          <div class="cert-footer-col">
+            <div class="cert-footer-label">Date of Issue</div>
+            <div class="cert-footer-value" id="cert-date"></div>
+          </div>
+          <div class="cert-footer-col">
+            <div class="cert-footer-label">Certificate ID</div>
+            <div class="cert-footer-value" id="cert-id"></div>
+          </div>
+          <div class="cert-footer-col">
+            <div class="cert-footer-label">Valid Until</div>
+            <div class="cert-footer-value">The Next Reorg</div>
+          </div>
+        </div>
+
+        <div class="cert-issuer">
+          Issued by The Data Gibberish Institute for Enterprise Excellence<br>
+          &amp; Advanced AI-Driven Thought Leadership&#8482;<br>
+          datagibberish.com
+        </div>
+
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="cert-actions">
+        <button class="btn-download" onclick="downloadImage()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Image
+        </button>
+
+        <button class="btn-outline-light" onclick="shareLinkedIn()">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          Share on LinkedIn
+        </button>
+
+        <div class="subscribe-cta">
+          <p>Want to actually get good at your data career?</p>
+          <a href="https://www.datagibberish.com/" target="_blank">Subscribe to Data Gibberish &#8594;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="cert-canvas"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+const questions = [
+  {
+    text: "A cross-functional stakeholder requests a real-time dashboard for a report they check monthly. What is the optimal enterprise response?",
+    options: [
+      "Leverage a scalable, AI-powered BI solution to drive cross-functional alignment",
+      "Build it, watch it get ignored, add it to your portfolio of invisible work",
+      "Schedule a synergy session to unpack the ask and establish a value-driven framework",
+      "Send a Confluence link they will never open"
+    ]
+  },
+  {
+    text: "Your AI-powered data pipeline fails in production at 4:57 PM on Friday. According to enterprise best practices, what is the root cause?",
+    options: [
+      "Insufficient alignment with the cloud-native data mesh paradigm",
+      "Someone pushed to main without testing, again",
+      "The AI component achieved sentience and chose work-life balance",
+      "Not enough certifications on the team"
+    ]
+  },
+  {
+    text: "A VP asks: \u201CCan\u2019t we just use AI for this?\u201D Based on your enterprise experience, what are they referring to?",
+    options: [
+      "A task that has worked fine manually for six years",
+      "Something they saw in a LinkedIn thought leadership post",
+      "A problem that would take longer to explain to the AI than to just do",
+      "Nobody knows, including the VP"
+    ]
+  },
+  {
+    text: "What does \u201Cdata-driven decision making\u201D mean at an enterprise-grade organization?",
+    options: [
+      "Decisions are made first, then data is found to support them retroactively",
+      "A dashboard exists somewhere that nobody can locate or access",
+      "The executive team saw a graph once and enjoyed the colors",
+      "Actionable insights are leveraged at scale to drive transformative outcomes"
+    ]
+  },
+  {
+    text: "Your organization is migrating to a modern data stack. What is the expected timeline?",
+    options: [
+      "Six weeks, as stated in the vendor presentation",
+      "Eighteen months and three re-architectures, as stated by reality",
+      "The migration itself will be migrated to a newer migration framework",
+      "Nobody remembers the original deadline. The stack is the journey."
+    ]
+  }
+];
+
+const specParts = [
+  ["Strategic Dashboard Avoidance", "Invisible Work Portfolio Management", "Synergy-Driven Alignment Architecture", "Documentation Distribution Excellence"],
+  ["AI-Aware Incident Response", "Deployment Firefighting at Scale", "Sentient Pipeline Negotiation", "Certification-Based Root Cause Analysis"],
+  ["Legacy Process Preservation", "LinkedIn Thought Leadership Translation", "Human-AI Task Arbitration", "Executive Intent Decryption"],
+  ["Retroactive Data Justification", "Dashboard Archeology", "Executive Color Theory", "Transformative Outcome Leveraging"],
+  ["Vendor Timeline Calibration", "Reality-Based Architecture", "Meta-Migration Engineering", "Existential Stack Philosophy"]
+];
+
+let currentQuestion = 0;
+let answers = [-1, -1, -1, -1, -1];
+let timerInterval;
+let timerSeconds = 0;
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const s = String(timerSeconds % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = m + ':' + s;
+  }, 1000);
+}
+
+function stopTimer() { clearInterval(timerInterval); }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startExam() {
+  showScreen('screen-quiz');
+  startTimer();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[currentQuestion];
+  document.getElementById('question-counter').textContent = 'Question ' + (currentQuestion + 1) + ' of ' + questions.length;
+  document.getElementById('progress-bar').style.width = ((currentQuestion + 1) / questions.length * 100) + '%';
+  document.getElementById('question-text').textContent = q.text;
+  const letters = ['A', 'B', 'C', 'D'];
+  const list = document.getElementById('options-list');
+  list.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option-item' + (answers[currentQuestion] === i ? ' selected' : '');
+    div.onclick = () => selectOption(i);
+    div.innerHTML = '<div class="option-radio"></div><div class="option-label"><span class="option-letter">' + letters[i] + '.</span> ' + opt + '</div>';
+    list.appendChild(div);
+  });
+  document.getElementById('btn-prev').style.visibility = currentQuestion === 0 ? 'hidden' : 'visible';
+  document.getElementById('btn-next').innerHTML = currentQuestion === questions.length - 1 ? 'Submit Exam' : 'Next &#8594;';
+  document.getElementById('btn-next').disabled = answers[currentQuestion] === -1;
+}
+
+function selectOption(i) {
+  answers[currentQuestion] = i;
+  document.querySelectorAll('.option-item').forEach((el, idx) => el.classList.toggle('selected', idx === i));
+  document.getElementById('btn-next').disabled = false;
+  setTimeout(() => nextQuestion(), 400);
+}
+
+function nextQuestion() {
+  if (currentQuestion < questions.length - 1) { currentQuestion++; renderQuestion(); }
+  else { stopTimer(); showScreen('screen-name'); document.getElementById('name-input').focus(); }
+}
+
+function prevQuestion() {
+  if (currentQuestion > 0) { currentQuestion--; renderQuestion(); }
+}
+
+function checkFormValid() {
+  const name = document.getElementById('name-input').value.trim();
+  const email = document.getElementById('email-input').value.trim();
+  document.getElementById('btn-generate').disabled = !(name.length >= 2 && email.includes('@') && email.includes('.'));
+}
+document.getElementById('name-input').addEventListener('input', checkFormValid);
+document.getElementById('email-input').addEventListener('input', checkFormValid);
+document.getElementById('email-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !document.getElementById('btn-generate').disabled) generateCert();
+});
+document.getElementById('name-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('email-input').focus();
+});
+
+function showToast(message, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast ' + type;
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function generateCert() {
+  const name = document.getElementById('name-input').value.trim();
+  const email = document.getElementById('email-input').value.trim();
+
+  const pick1 = Math.floor(Math.random() * 3);
+  const pick2 = 3 + Math.floor(Math.random() * 2);
+  const specialization = specParts[pick1][answers[pick1]] + ' & ' + specParts[pick2][answers[pick2]];
+  const certId = 'DG-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-2026';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  document.getElementById('cert-name').textContent = name;
+  document.getElementById('cert-spec').textContent = specialization;
+  document.getElementById('cert-id').textContent = certId;
+  document.getElementById('cert-date').textContent = dateStr;
+
+  document.querySelector('.exam-header').style.display = 'none';
+  showScreen('screen-cert');
+
+  // Submit to backend (non-blocking — cert shows regardless)
+  const btn = document.getElementById('btn-generate');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+
+  fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, specialization, certId, date: dateStr })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast('Certificate sent to ' + email, 'success');
+    } else {
+      showToast('Could not send email — download your cert above!', 'error');
+    }
+  })
+  .catch(() => {
+    showToast('Could not send email — download your cert above!', 'error');
+  });
+}
+
+async function downloadImage() {
+  const cert = document.getElementById('certificate-container');
+  const btn = document.querySelector('.btn-download');
+  btn.textContent = 'Generating...';
+  btn.disabled = true;
+  try {
+    if (!window.html2canvas) {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      document.head.appendChild(script);
+      await new Promise((resolve, reject) => { script.onload = resolve; script.onerror = reject; });
+    }
+    const canvas = await html2canvas(cert, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+    const link = document.createElement('a');
+    link.download = 'Data-Gibberish-Certification-AI-Powered-Insights-Leverage-Specialist.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    console.error('Download failed:', e);
+    alert('Download failed. Try taking a screenshot instead!');
+  }
+  btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Image';
+  btn.disabled = false;
+}
+
+function shareLinkedIn() {
+  const url = encodeURIComponent(window.location.href);
+  window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + url, '_blank');
+}
+</script>
+</body>
+</html>
