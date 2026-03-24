@@ -1,10 +1,16 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { Resvg, initWasm } from "@resvg/resvg-wasm";
+// @ts-ignore — wrangler bundles .wasm imports
+import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
+import satori from "satori";
 
 interface Env {
   SENDFOX_API_KEY: string;
   SENDFOX_LIST_ID: string;
   RESEND_API_KEY: string;
   RESEND_FROM_EMAIL: string;
+  CERT_IMAGES: R2Bucket;
+  ASSETS: Fetcher;
 }
 
 interface CertRequest {
@@ -14,6 +20,31 @@ interface CertRequest {
   certId: string;
   date: string;
 }
+
+/* ── wasm + font singleton ─────────────────────────────── */
+
+let wasmReady: Promise<void> | null = null;
+
+function ensureWasm(): Promise<void> {
+  if (!wasmReady) {
+    wasmReady = initWasm(resvgWasm);
+  }
+  return wasmReady;
+}
+
+let fontCache: { regular: ArrayBuffer; bold: ArrayBuffer } | null = null;
+
+async function loadFonts(assets: Fetcher): Promise<{ regular: ArrayBuffer; bold: ArrayBuffer }> {
+  if (fontCache) return fontCache;
+  const [regular, bold] = await Promise.all([
+    assets.fetch(new URL('/fonts/dm-sans-400.ttf', 'https://placeholder')).then(r => r.arrayBuffer()),
+    assets.fetch(new URL('/fonts/dm-sans-700.ttf', 'https://placeholder')).then(r => r.arrayBuffer()),
+  ]);
+  fontCache = { regular, bold };
+  return fontCache;
+}
+
+/* ── handler ───────────────────────────────────────────── */
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const corsHeaders = {
@@ -28,34 +59,38 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     if (!name || !email || !specialization || !certId || !date) {
       return new Response(
         JSON.stringify({ success: false, error: "Missing required fields" }),
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: corsHeaders },
       );
     }
 
-    // Run SendFox (fire-and-forget) + PDF generation in parallel
+    // Initialise wasm (no-op after the first call in this isolate)
+    await ensureWasm();
+
+    // Run SendFox, PDF, and PNG generation in parallel
     const sendFoxPromise = addToSendFox(context.env, email, name).catch(
-      (err) => console.error("SendFox error:", err)
+      (err) => console.error("SendFox error:", err),
     );
 
-    const pdfPromise = generateCertificatePDF(
-      name,
-      specialization,
-      certId,
-      date
-    );
+    const pdfPromise = generateCertificatePDF(name, specialization, certId, date);
+    const pngPromise = generateCertificateImage(name, specialization, certId, date, context.env.ASSETS);
 
-    const [, pdfBytes] = await Promise.all([sendFoxPromise, pdfPromise]);
+    const [, pdfBytes, pngBytes] = await Promise.all([
+      sendFoxPromise,
+      pdfPromise,
+      pngPromise,
+    ]);
 
-    // Send email with PDF attachment via Resend
-    await sendCertificateEmail(
-      context.env,
-      email,
-      name,
-      certId,
-      pdfBytes
-    );
+    // Upload PNG to R2
+    const shareUrl = `https://certification.datagibberish.com/share/${certId}`;
+    await context.env.CERT_IMAGES.put(`certs/${certId}.png`, pngBytes, {
+      httpMetadata: { contentType: "image/png" },
+      customMetadata: { name, specialization },
+    });
 
-    return new Response(JSON.stringify({ success: true }), {
+    // Send certificate email with PDF
+    await sendCertificateEmail(context.env, email, name, certId, pdfBytes);
+
+    return new Response(JSON.stringify({ success: true, shareUrl }), {
       headers: corsHeaders,
     });
   } catch (err) {
@@ -65,7 +100,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         success: false,
         error: "Failed to process certification",
       }),
-      { status: 500, headers: corsHeaders }
+      { status: 500, headers: corsHeaders },
     );
   }
 };
@@ -80,40 +115,214 @@ export const onRequestOptions: PagesFunction = async () => {
   });
 };
 
-async function addToSendFox(
-  env: Env,
-  email: string,
-  name: string
-): Promise<void> {
-  const nameParts = name.split(" ");
-  const firstName = nameParts[0];
-  const lastName = nameParts.slice(1).join(" ") || "";
+/* ── PNG generation (Satori → resvg) ─────────────────── */
 
-  const res = await fetch("https://api.sendfox.com/contacts", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.SENDFOX_API_KEY}`,
-      "Content-Type": "application/json",
+function certificateLayout(
+  name: string,
+  specialization: string,
+  certId: string,
+  date: string,
+): any {
+  const nameSize = name.length > 24 ? 42 : 52;
+
+  return {
+    type: 'div',
+    props: {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+        background: 'white',
+        padding: '28px 56px',
+        fontFamily: 'DM Sans',
+      },
+      children: [
+        // Outer border
+        {
+          type: 'div',
+          props: {
+            style: {
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: '100%',
+              height: '100%',
+              border: '1px solid #cbd5e1',
+              padding: '20px 40px',
+            },
+            children: [
+              // Top line
+              {
+                type: 'div',
+                props: {
+                  style: { fontSize: 14, fontWeight: 700, color: '#6a7282', letterSpacing: 4, marginTop: 8 },
+                  children: 'CERTIFICATE OF ENTERPRISE EXCELLENCE',
+                },
+              },
+              // Seal
+              {
+                type: 'div',
+                props: {
+                  style: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
+                    border: '2px solid #1e2939',
+                    marginTop: 12,
+                  },
+                  children: [
+                    { type: 'div', props: { style: { fontSize: 13, fontWeight: 700, color: '#1e2939', letterSpacing: 0.5 }, children: 'DATA' } },
+                    { type: 'div', props: { style: { fontSize: 13, fontWeight: 700, color: '#1e2939', letterSpacing: 0.5 }, children: 'GIBBERISH' } },
+                    { type: 'div', props: { style: { fontSize: 9, fontWeight: 700, color: '#6a7282', letterSpacing: 2, marginTop: 2 }, children: 'CERTIFIED' } },
+                  ],
+                },
+              },
+              // Certify text
+              { type: 'div', props: { style: { fontSize: 20, color: '#6a7282', marginTop: 14 }, children: 'This is to certify that' } },
+              { type: 'div', props: { style: { fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: 3, marginTop: 4 }, children: 'THE FOLLOWING INDIVIDUAL' } },
+              // Name
+              { type: 'div', props: { style: { fontSize: nameSize, fontWeight: 700, color: '#1e2939', marginTop: 16 }, children: name } },
+              // Divider
+              { type: 'div', props: { style: { width: 60, height: 2, background: '#1e2939', marginTop: 10 } } },
+              // Title
+              { type: 'div', props: { style: { fontSize: 38, fontWeight: 700, color: '#1e2939', marginTop: 18 }, children: 'Licensed AI-Powered Insights' } },
+              { type: 'div', props: { style: { fontSize: 38, fontWeight: 700, color: '#1e2939', marginTop: 4 }, children: 'Leverage Specialist\u2122' } },
+              // Body text
+              {
+                type: 'div',
+                props: {
+                  style: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 16 },
+                  children: [
+                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282' }, children: 'has demonstrated exceptional proficiency in Leveraging Cross-Functional' } },
+                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282', marginTop: 4 }, children: 'Synergies Across the Modern AI-Powered Data Stack and is hereby authorized' } },
+                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282', marginTop: 4 }, children: 'to Drive Scalable, Enterprise-Grade, Value-Aligned Data Outcomes in any' } },
+                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282', marginTop: 4 }, children: 'organization that has no idea what any of this means.' } },
+                  ],
+                },
+              },
+              // Specialization box
+              {
+                type: 'div',
+                props: {
+                  style: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 4,
+                    padding: '12px 40px',
+                    marginTop: 16,
+                    minWidth: 600,
+                  },
+                  children: [
+                    { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#6a7282', letterSpacing: 2.5 }, children: 'AREA OF SPECIALIZATION' } },
+                    { type: 'div', props: { style: { fontSize: 18, fontWeight: 700, color: '#1e2939', marginTop: 8 }, children: specialization } },
+                  ],
+                },
+              },
+              // Footer divider
+              { type: 'div', props: { style: { width: '90%', height: 1, background: '#cbd5e1', marginTop: 18 } } },
+              // Footer columns
+              {
+                type: 'div',
+                props: {
+                  style: { display: 'flex', justifyContent: 'space-between', width: '90%', marginTop: 14 },
+                  children: [
+                    {
+                      type: 'div',
+                      props: {
+                        style: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+                        children: [
+                          { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: 2 }, children: 'DATE OF ISSUE' } },
+                          { type: 'div', props: { style: { fontSize: 16, color: '#6a7282', marginTop: 4 }, children: date } },
+                        ],
+                      },
+                    },
+                    {
+                      type: 'div',
+                      props: {
+                        style: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+                        children: [
+                          { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: 2 }, children: 'CERTIFICATE ID' } },
+                          { type: 'div', props: { style: { fontSize: 16, color: '#6a7282', marginTop: 4 }, children: certId } },
+                        ],
+                      },
+                    },
+                    {
+                      type: 'div',
+                      props: {
+                        style: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+                        children: [
+                          { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: 2 }, children: 'VALID UNTIL' } },
+                          { type: 'div', props: { style: { fontSize: 16, color: '#6a7282', marginTop: 4 }, children: 'The Next Reorg' } },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+              // Issuer
+              {
+                type: 'div',
+                props: {
+                  style: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 16 },
+                  children: [
+                    { type: 'div', props: { style: { fontSize: 12, color: '#94a3b8' }, children: 'Issued by The Data Gibberish Institute for Enterprise Excellence' } },
+                    { type: 'div', props: { style: { fontSize: 12, color: '#94a3b8', marginTop: 2 }, children: '& Advanced AI-Driven Thought Leadership\u2122' } },
+                    { type: 'div', props: { style: { fontSize: 12, fontWeight: 700, color: '#94a3b8', marginTop: 2 }, children: 'datagibberish.com' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ],
     },
-    body: JSON.stringify({
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      lists: env.SENDFOX_LIST_ID.split(",").map((id) => Number(id.trim())),
-    }),
+  };
+}
+
+async function generateCertificateImage(
+  name: string,
+  specialization: string,
+  certId: string,
+  date: string,
+  assets: Fetcher,
+): Promise<Uint8Array> {
+  const fonts = await loadFonts(assets);
+
+  const svg = await satori(certificateLayout(name, specialization, certId, date), {
+    width: 1600,
+    height: 900,
+    fonts: [
+      { name: 'DM Sans', data: fonts.regular, weight: 400, style: 'normal' as const },
+      { name: 'DM Sans', data: fonts.bold, weight: 700, style: 'normal' as const },
+    ],
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`SendFox ${res.status}: ${text}`);
-  }
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: 'original' },
+  });
+
+  const rendered = resvg.render();
+  const png = rendered.asPng();
+  rendered.free();
+  return png;
 }
+
+/* ── PDF generation ────────────────────────────────────── */
 
 async function generateCertificatePDF(
   name: string,
   specialization: string,
   certId: string,
-  date: string
+  date: string,
 ): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([842, 595]); // A4 landscape
@@ -122,12 +331,13 @@ async function generateCertificatePDF(
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const dark = rgb(0.118, 0.161, 0.224); // #1e2939
-  const muted = rgb(0.416, 0.447, 0.51); // #6a7282
-  const light = rgb(0.58, 0.639, 0.722); // #94a3b8
-  const border = rgb(0.796, 0.835, 0.882); // #cbd5e1
+  const dark = rgb(0.118, 0.161, 0.224);
+  const muted = rgb(0.416, 0.447, 0.51);
+  const light = rgb(0.58, 0.639, 0.722);
+  const border = rgb(0.796, 0.835, 0.882);
+  const boxBg = rgb(0.945, 0.961, 0.976); // #f1f5f9
 
-  // Border lines
+  // Border
   page.drawRectangle({
     x: 20,
     y: 20,
@@ -265,22 +475,40 @@ async function generateCertificatePDF(
     bodyY -= 16;
   }
 
-  // Specialization box
+  // Specialization box — filled rectangle with border
+  const specSize = specialization.length > 50 ? 10 : 12;
   const specLabelText = "AREA OF SPECIALIZATION";
   const specLabelW = helveticaBold.widthOfTextAtSize(specLabelText, 6);
+  const specW = helveticaBold.widthOfTextAtSize(specialization, specSize);
+  const boxContentW = Math.max(specLabelW, specW);
+  const boxPadX = 30;
+  const boxPadY = 10;
+  const boxW = boxContentW + boxPadX * 2;
+  const boxH = 40;
+  const boxX = cx - boxW / 2;
+  const boxY = height - 413;
+
+  page.drawRectangle({
+    x: boxX,
+    y: boxY,
+    width: boxW,
+    height: boxH,
+    color: boxBg,
+    borderColor: border,
+    borderWidth: 1,
+  });
+
   page.drawText(specLabelText, {
     x: cx - specLabelW / 2,
-    y: height - 385,
+    y: boxY + boxH - boxPadY - 6,
     size: 6,
     font: helveticaBold,
     color: muted,
   });
 
-  const specSize = specialization.length > 50 ? 10 : 12;
-  const specW = helveticaBold.widthOfTextAtSize(specialization, specSize);
   page.drawText(specialization, {
     x: cx - specW / 2,
-    y: height - 400,
+    y: boxY + boxPadY,
     size: specSize,
     font: helveticaBold,
     color: dark,
@@ -355,12 +583,45 @@ async function generateCertificatePDF(
   return await pdfDoc.save();
 }
 
+/* ── SendFox ───────────────────────────────────────────── */
+
+async function addToSendFox(
+  env: Env,
+  email: string,
+  name: string,
+): Promise<void> {
+  const nameParts = name.split(" ");
+  const firstName = nameParts[0];
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  const res = await fetch("https://api.sendfox.com/contacts", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.SENDFOX_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      lists: env.SENDFOX_LIST_ID.split(",").map((id) => Number(id.trim())),
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`SendFox ${res.status}: ${text}`);
+  }
+}
+
+/* ── Email ─────────────────────────────────────────────── */
+
 async function sendCertificateEmail(
   env: Env,
   email: string,
   name: string,
   certId: string,
-  pdfBytes: Uint8Array
+  pdfBytes: Uint8Array,
 ): Promise<void> {
   let binary = "";
   for (let i = 0; i < pdfBytes.length; i++) {
@@ -377,12 +638,12 @@ async function sendCertificateEmail(
     body: JSON.stringify({
       from: env.RESEND_FROM_EMAIL,
       to: [email],
-      subject: `Your Official Certification: Licensed AI-Powered Insights Leverage Specialist™ (${certId})`,
+      subject: `Your Official Certification: Licensed AI-Powered Insights Leverage Specialist\u2122 (${certId})`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
           <h2 style="color: #1e2939;">Congratulations, ${name}!</h2>
           <p style="color: #6a7282; line-height: 1.6;">
-            Your official <strong>Licensed AI-Powered Insights Leverage Specialist™</strong> certificate is attached to this email.
+            Your official <strong>Licensed AI-Powered Insights Leverage Specialist\u2122</strong> certificate is attached to this email.
           </p>
           <p style="color: #6a7282; line-height: 1.6;">
             Certificate ID: <strong>${certId}</strong>
@@ -401,7 +662,7 @@ async function sendCertificateEmail(
           </div>
           <hr style="border: none; border-top: 1px solid #e2e5ea; margin: 24px 0;">
           <p style="color: #94a3b8; font-size: 13px;">
-            Issued by The Data Gibberish Institute for Enterprise Excellence & Advanced AI-Driven Thought Leadership™
+            Issued by The Data Gibberish Institute for Enterprise Excellence & Advanced AI-Driven Thought Leadership\u2122
           </p>
         </div>
       `,
