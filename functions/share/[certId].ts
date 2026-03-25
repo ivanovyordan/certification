@@ -77,14 +77,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     .cert-footer-value { font-size: 13px; color: var(--c2); font-weight: 500; }
     .cert-issuer { font-size: 9px; letter-spacing: 1px; color: var(--c3); margin-top: 20px; line-height: 1.6; }
     .actions { text-align: center; margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-    .btn-linkedin { display: inline-flex; align-items: center; gap: 8px; background: white; color: var(--c1); border: none; padding: 14px 36px; font-size: 15px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-family: 'DM Sans', sans-serif; text-decoration: none; }
-    .btn-linkedin:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
-    .btn-get-cert { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1.5px solid var(--c3); color: #ffffff; padding: 12px 28px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-family: 'DM Sans', sans-serif; text-decoration: none; }
+    .btn-subscribe { display: inline-block; background: #2563eb; color: #ffffff; padding: 16px 48px; font-size: 17px; font-weight: 700; border-radius: 8px; text-decoration: none; transition: background 0.2s, transform 0.2s; font-family: 'DM Sans', sans-serif; }
+    .btn-subscribe:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .subscribe-hint { color: var(--c4); font-size: 14px; margin-top: 8px; }
+    .secondary-actions { display: flex; gap: 16px; margin-top: 32px; padding-top: 28px; border-top: 1px solid #364152; }
+    .btn-linkedin { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1.5px solid var(--c3); color: #ffffff; padding: 12px 24px; font-size: 14px; font-weight: 600; border-radius: 8px; transition: all 0.2s ease; font-family: 'DM Sans', sans-serif; text-decoration: none; }
+    .btn-linkedin:hover { border-color: #ffffff; }
+    .btn-get-cert { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1.5px solid var(--c3); color: #ffffff; padding: 12px 24px; font-size: 14px; font-weight: 600; border-radius: 8px; transition: all 0.2s ease; font-family: 'DM Sans', sans-serif; text-decoration: none; }
     .btn-get-cert:hover { border-color: #ffffff; }
-    .subscribe-cta { text-align: center; margin-top: 40px; padding-top: 28px; border-top: 1px solid #364152; }
-    .subscribe-cta p { color: var(--c4); font-size: 14px; margin-bottom: 12px; }
-    .subscribe-cta a { color: white; text-decoration: none; font-weight: 700; font-size: 16px; transition: color 0.2s; }
-    .subscribe-cta a:hover { color: var(--c4); }
     @media (max-width: 640px) {
       .cert { padding: 32px 20px; }
       .cert-title { font-size: 21px; }
@@ -151,14 +151,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     </div>
 
     <div class="actions">
-      <a class="btn-linkedin" href="${esc(linkedInUrl)}" target="_blank">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-        Share on LinkedIn
-      </a>
-      <a class="btn-get-cert" href="${certUrl}">Get Your Free Certificate &rarr;</a>
-      <div class="subscribe-cta">
-        <p>Want to actually get good at your data career?</p>
-        <a href="https://www.datagibberish.com/" target="_blank">Subscribe to Data Gibberish &rarr;</a>
+      <a class="btn-subscribe" href="https://www.datagibberish.com/" target="_blank">Subscribe to Data Gibberish &rarr;</a>
+      <p class="subscribe-hint">Want to actually get good at your data career?</p>
+      <div class="secondary-actions">
+        <a class="btn-linkedin" href="${esc(linkedInUrl)}" target="_blank">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          Share on LinkedIn
+        </a>
+        <a class="btn-get-cert" href="${certUrl}">Get Your Free Certificate &rarr;</a>
       </div>
     </div>
   </div>
