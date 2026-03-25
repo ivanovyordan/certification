@@ -12,8 +12,21 @@ interface CertRequest {
   name: string;
   email: string;
   specialization: string;
-  certId: string;
-  date: string;
+}
+
+/* ── cert ID generation ───────────────────────────────── */
+
+async function generateUniqueCertId(bucket: R2Bucket): Promise<string> {
+  const year = new Date().getFullYear();
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const certId = `DG-${random}-${year}`;
+    const existing = await bucket.head(`certs/${certId}.json`);
+    if (!existing) return certId;
+  }
+  // Extremely unlikely fallback: use full UUID fragment
+  const fallback = crypto.randomUUID().substring(0, 8).toUpperCase();
+  return `DG-${fallback}-${new Date().getFullYear()}`;
 }
 
 /* ── handler ───────────────────────────────────────────── */
@@ -26,14 +39,17 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const body = (await context.request.json()) as CertRequest;
-    const { name, email, specialization, certId, date } = body;
+    const { name, email, specialization } = body;
 
-    if (!name || !email || !specialization || !certId || !date) {
+    if (!name || !email || !specialization) {
       return new Response(
         JSON.stringify({ success: false, error: "Missing required fields" }),
         { status: 400, headers: corsHeaders },
       );
     }
+
+    const certId = await generateUniqueCertId(context.env.CERT_IMAGES);
+    const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
     // Run SendFox and PDF generation in parallel
     const sendFoxPromise = addToSendFox(context.env, email, name).catch(

@@ -455,21 +455,6 @@ function generateCert() {
   const pick1 = Math.floor(Math.random() * 3);
   const pick2 = 3 + Math.floor(Math.random() * 2);
   const specialization = specParts[pick1][answers[pick1]] + ' & ' + specParts[pick2][answers[pick2]];
-  const certId = 'DG-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-2026';
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-  storedCertId = certId;
-
-  document.getElementById('cert-name').textContent = name;
-  document.getElementById('cert-spec').textContent = specialization;
-  document.getElementById('cert-id').textContent = certId;
-  document.getElementById('cert-date').textContent = dateStr;
-
-  document.querySelector('.exam-header').style.display = 'none';
-  showScreen('screen-cert');
-
-  // Submit to backend (non-blocking — cert shows regardless)
   const btn = document.getElementById('btn-generate');
   btn.disabled = true;
   btn.textContent = 'Generating...';
@@ -477,18 +462,22 @@ function generateCert() {
   fetch('/api/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, specialization, certId, date: dateStr })
+    body: JSON.stringify({ name, email, specialization })
   })
   .then(res => res.json())
   .then(data => {
     if (data.success && data.shareUrl) {
       window.location.href = data.shareUrl;
     } else {
-      showToast('Could not send email, but your certificate is above!', 'error');
+      showToast('Something went wrong. Please try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Generate Certificate';
     }
   })
   .catch(() => {
-    showToast('Could not send email, but your certificate is above!', 'error');
+    showToast('Something went wrong. Please try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Generate Certificate';
   });
 }
 </script>
