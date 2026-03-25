@@ -6,9 +6,7 @@
     "deploy": "wrangler pages deploy public"
   },
   "dependencies": {
-    "@resvg/resvg-wasm": "^2.6.2",
-    "pdf-lib": "^1.17.1",
-    "satori": "^0.26.0"
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241205.0",

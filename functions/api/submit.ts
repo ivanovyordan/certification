@@ -1,8 +1,4 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { Resvg, initWasm } from "@resvg/resvg-wasm";
-// @ts-ignore — wrangler bundles .wasm imports
-import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
-import satori from "satori";
 
 interface Env {
   SENDFOX_API_KEY: string;
@@ -10,7 +6,6 @@ interface Env {
   RESEND_API_KEY: string;
   RESEND_FROM_EMAIL: string;
   CERT_IMAGES: R2Bucket;
-  ASSETS: Fetcher;
 }
 
 interface CertRequest {
@@ -19,29 +14,6 @@ interface CertRequest {
   specialization: string;
   certId: string;
   date: string;
-}
-
-/* ── wasm + font singleton ─────────────────────────────── */
-
-let wasmReady: Promise<void> | null = null;
-
-function ensureWasm(): Promise<void> {
-  if (!wasmReady) {
-    wasmReady = initWasm(resvgWasm);
-  }
-  return wasmReady;
-}
-
-let fontCache: { regular: ArrayBuffer; bold: ArrayBuffer } | null = null;
-
-async function loadFonts(assets: Fetcher): Promise<{ regular: ArrayBuffer; bold: ArrayBuffer }> {
-  if (fontCache) return fontCache;
-  const [regular, bold] = await Promise.all([
-    assets.fetch(new URL('/fonts/dm-sans-400.ttf', 'https://placeholder')).then(r => r.arrayBuffer()),
-    assets.fetch(new URL('/fonts/dm-sans-700.ttf', 'https://placeholder')).then(r => r.arrayBuffer()),
-  ]);
-  fontCache = { regular, bold };
-  return fontCache;
 }
 
 /* ── handler ───────────────────────────────────────────── */
@@ -63,28 +35,22 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       );
     }
 
-    // Initialise wasm (no-op after the first call in this isolate)
-    await ensureWasm();
-
-    // Run SendFox, PDF, and PNG generation in parallel
+    // Run SendFox and PDF generation in parallel
     const sendFoxPromise = addToSendFox(context.env, email, name).catch(
       (err) => console.error("SendFox error:", err),
     );
 
     const pdfPromise = generateCertificatePDF(name, specialization, certId, date);
-    const pngPromise = generateCertificateImage(name, specialization, certId, date, context.env.ASSETS);
 
-    const [, pdfBytes, pngBytes] = await Promise.all([
+    const [, pdfBytes] = await Promise.all([
       sendFoxPromise,
       pdfPromise,
-      pngPromise,
     ]);
 
-    // Upload PNG to R2
+    // Store cert metadata in R2 for the share page
     const shareUrl = `https://certification.datagibberish.com/share/${certId}`;
-    await context.env.CERT_IMAGES.put(`certs/${certId}.png`, pngBytes, {
-      httpMetadata: { contentType: "image/png" },
-      customMetadata: { name, specialization },
+    await context.env.CERT_IMAGES.put(`certs/${certId}.json`, JSON.stringify({ name, specialization, date }), {
+      httpMetadata: { contentType: "application/json" },
     });
 
     // Send certificate email with PDF
@@ -114,207 +80,6 @@ export const onRequestOptions: PagesFunction = async () => {
     },
   });
 };
-
-/* ── PNG generation (Satori → resvg) ─────────────────── */
-
-function certificateLayout(
-  name: string,
-  specialization: string,
-  certId: string,
-  date: string,
-): any {
-  const nameSize = name.length > 24 ? 42 : 52;
-
-  return {
-    type: 'div',
-    props: {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        background: 'white',
-        padding: '28px 56px',
-        fontFamily: 'DM Sans',
-      },
-      children: [
-        // Outer border
-        {
-          type: 'div',
-          props: {
-            style: {
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              width: '100%',
-              height: '100%',
-              border: '1px solid #cbd5e1',
-              padding: '20px 40px',
-            },
-            children: [
-              // Top line
-              {
-                type: 'div',
-                props: {
-                  style: { fontSize: 14, fontWeight: 700, color: '#6a7282', letterSpacing: 4, marginTop: 8 },
-                  children: 'CERTIFICATE OF ENTERPRISE EXCELLENCE',
-                },
-              },
-              // Seal
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 80,
-                    height: 80,
-                    borderRadius: '50%',
-                    border: '2px solid #1e2939',
-                    marginTop: 12,
-                  },
-                  children: [
-                    { type: 'div', props: { style: { fontSize: 13, fontWeight: 700, color: '#1e2939', letterSpacing: 0.5 }, children: 'DATA' } },
-                    { type: 'div', props: { style: { fontSize: 13, fontWeight: 700, color: '#1e2939', letterSpacing: 0.5 }, children: 'GIBBERISH' } },
-                    { type: 'div', props: { style: { fontSize: 9, fontWeight: 700, color: '#6a7282', letterSpacing: 2, marginTop: 2 }, children: 'CERTIFIED' } },
-                  ],
-                },
-              },
-              // Certify text
-              { type: 'div', props: { style: { fontSize: 20, color: '#6a7282', marginTop: 14 }, children: 'This is to certify that' } },
-              { type: 'div', props: { style: { fontSize: 12, fontWeight: 700, color: '#94a3b8', letterSpacing: 3, marginTop: 4 }, children: 'THE FOLLOWING INDIVIDUAL' } },
-              // Name
-              { type: 'div', props: { style: { fontSize: nameSize, fontWeight: 700, color: '#1e2939', marginTop: 16 }, children: name } },
-              // Divider
-              { type: 'div', props: { style: { width: 60, height: 2, background: '#1e2939', marginTop: 10 } } },
-              // Title
-              { type: 'div', props: { style: { fontSize: 38, fontWeight: 700, color: '#1e2939', marginTop: 18 }, children: 'Licensed AI-Powered Insights' } },
-              { type: 'div', props: { style: { fontSize: 38, fontWeight: 700, color: '#1e2939', marginTop: 4 }, children: 'Leverage Specialist\u2122' } },
-              // Body text
-              {
-                type: 'div',
-                props: {
-                  style: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 16 },
-                  children: [
-                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282' }, children: 'has demonstrated exceptional proficiency in Leveraging Cross-Functional' } },
-                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282', marginTop: 4 }, children: 'Synergies Across the Modern AI-Powered Data Stack and is hereby authorized' } },
-                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282', marginTop: 4 }, children: 'to Drive Scalable, Enterprise-Grade, Value-Aligned Data Outcomes in any' } },
-                    { type: 'div', props: { style: { fontSize: 17, color: '#6a7282', marginTop: 4 }, children: 'organization that has no idea what any of this means.' } },
-                  ],
-                },
-              },
-              // Specialization box
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    background: '#f1f5f9',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: 4,
-                    padding: '12px 40px',
-                    marginTop: 16,
-                    minWidth: 600,
-                  },
-                  children: [
-                    { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#6a7282', letterSpacing: 2.5 }, children: 'AREA OF SPECIALIZATION' } },
-                    { type: 'div', props: { style: { fontSize: 18, fontWeight: 700, color: '#1e2939', marginTop: 8 }, children: specialization } },
-                  ],
-                },
-              },
-              // Footer divider
-              { type: 'div', props: { style: { width: '90%', height: 1, background: '#cbd5e1', marginTop: 18 } } },
-              // Footer columns
-              {
-                type: 'div',
-                props: {
-                  style: { display: 'flex', justifyContent: 'space-between', width: '90%', marginTop: 14 },
-                  children: [
-                    {
-                      type: 'div',
-                      props: {
-                        style: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-                        children: [
-                          { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: 2 }, children: 'DATE OF ISSUE' } },
-                          { type: 'div', props: { style: { fontSize: 16, color: '#6a7282', marginTop: 4 }, children: date } },
-                        ],
-                      },
-                    },
-                    {
-                      type: 'div',
-                      props: {
-                        style: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-                        children: [
-                          { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: 2 }, children: 'CERTIFICATE ID' } },
-                          { type: 'div', props: { style: { fontSize: 16, color: '#6a7282', marginTop: 4 }, children: certId } },
-                        ],
-                      },
-                    },
-                    {
-                      type: 'div',
-                      props: {
-                        style: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-                        children: [
-                          { type: 'div', props: { style: { fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: 2 }, children: 'VALID UNTIL' } },
-                          { type: 'div', props: { style: { fontSize: 16, color: '#6a7282', marginTop: 4 }, children: 'The Next Reorg' } },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-              // Issuer
-              {
-                type: 'div',
-                props: {
-                  style: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 16 },
-                  children: [
-                    { type: 'div', props: { style: { fontSize: 12, color: '#94a3b8' }, children: 'Issued by The Data Gibberish Institute for Enterprise Excellence' } },
-                    { type: 'div', props: { style: { fontSize: 12, color: '#94a3b8', marginTop: 2 }, children: '& Advanced AI-Driven Thought Leadership\u2122' } },
-                    { type: 'div', props: { style: { fontSize: 12, fontWeight: 700, color: '#94a3b8', marginTop: 2 }, children: 'datagibberish.com' } },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      ],
-    },
-  };
-}
-
-async function generateCertificateImage(
-  name: string,
-  specialization: string,
-  certId: string,
-  date: string,
-  assets: Fetcher,
-): Promise<Uint8Array> {
-  const fonts = await loadFonts(assets);
-
-  const svg = await satori(certificateLayout(name, specialization, certId, date), {
-    width: 1600,
-    height: 900,
-    fonts: [
-      { name: 'DM Sans', data: fonts.regular, weight: 400, style: 'normal' as const },
-      { name: 'DM Sans', data: fonts.bold, weight: 700, style: 'normal' as const },
-    ],
-  });
-
-  const resvg = new Resvg(svg, {
-    fitTo: { mode: 'original' },
-  });
-
-  const rendered = resvg.render();
-  const png = rendered.asPng();
-  rendered.free();
-  return png;
-}
 
 /* ── PDF generation ────────────────────────────────────── */
 
